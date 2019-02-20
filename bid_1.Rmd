@@ -1,0 +1,204 @@
+---
+title: "00_test"
+author: "rcj"
+date: "16/02/2019"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+params:
+  airzone:
+    choices:
+    - alpha
+    - bravo
+    - charlie
+    - delta
+    - echo
+    - foxtrot
+    value: alpha
+  year:
+    input: slider
+    max: 2018
+    min: 2007
+    round: 1
+    sep: ''
+    step: 1
+    value:
+    - 2007
+    - 2018
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(patchwork)
+library(tidyverse)
+library(gt)
+library(testthat)
+source("function_source.R")
+phrases <- set_phrases()
+```
+
+This is a prototype report demonstrating the current state of the functions to generate the desired outputs.
+
+```{r}
+source(here::here("function_source.R"))
+```
+
+## Acquire National Air Quality Standards
+```{r}
+#aq_ozone, aq_pm25_24h, aq_pm25_annual
+aq_ozone        <- set_airquality_constants()[1]
+aq_pm25_24h     <- set_airquality_constants()[2]
+aq_pm25_annual  <- set_airquality_constants()[3]
+```
+The national reference value for ozone is `r aq_ozone` and for PM25 is `r aq_pm25_annual`. In the future these will need to be allowed to vary by year. 
+
+## Simulated Data
+
+We were unable to run the ozone and pm25 github repo code, so we generate some data here:
+
+```{r}
+fake_ozone<- generate_dummy_data() %>% select(-pm25)
+
+fake_pm25 <- generate_dummy_data() %>% select(-ozone)
+
+
+```
+
+Our fake ozone data looks like this:
+```{r}
+fake_ozone %>% group_by(airzone) %>% sample_n(5)
+```
+
+Our simulated PM25 data looks like this:
+
+```{r}
+fake_pm25 %>% group_by(airzone) %>% sample_n(5)
+```
+
+## Setup for Parameterized Report
+
+```{r}
+#set up datasets for this report
+
+AirZone_specific_ozone <- fake_ozone %>% get_selected_airzone(params$airzone)
+   
+AirZone_specific_pm25  <- fake_pm25  %>%  get_selected_airzone(params$airzone)
+
+AirZone_specific_phrases  <- phrases %>%  get_selected_airzone(params$airzone)
+      
+# phrases gives more meaningful names for airzones.
+```
+
+## Parameterization
+
+__`r AirZone_specific_phrases$station_name`__ is the airzone selected for parameterized reporting in this document. We are reporting for the year `r params$year`.
+
+## Tables
+
+Tables are to be produced using the "gt" package.
+
+### Table 1
+
+In several of the tables (Table 1 in particular), the extant tables use "merged cells", either merging cells vertically or horizontally. This is not a supported feature (yet) in "gt". 
+
+It is possible that other table-writing tools in R can produce this table, but it may be easier to produce the table outside of R. The table could, for example, be generated using an HTML table tool, and then the associated HTML code inserted into the Rmd document.  Note that the values within the table are static and do not appear to depend on data.
+
+### Table 2
+```{r}
+table2_data <- make_table2_data()
+```
+
+Our table data looks like this:
+
+```{r}
+table2_data %>% print()
+```
+
+From this we can generate a draft table 2, including the "spanner" across the "As Measured" and "TT_EE_Removed" columns
+
+```{r}
+make_table2(table2_data, AirZone_specific_phrases)
+```
+
+Note: There is a bug in GT such that while table columns are coloured in html and docx, the columns are not coloured in pdf format. File bug report. 
+
+
+### Table 3
+
+```{r}
+table3_data <- make_table3_data()
+
+```
+
+And here is the draft table:
+```{r}
+make_table3(table3_data, AirZone_specific_phrases)
+```
+Note that - for the same reasons we can't produce Table 1 -- cell merging - we can't get the several cells of AZML values rendered into a single cell.
+Right now it reads "Red" on each line. Not ideal. 
+
+Some additional work is needed here. 
+
+
+## Figures
+
+### Figure 2
+
+
+We'll need some data from ozone, so let's find the 4th worst ozone day for the last year
+
+```{r}
+most_recent_year = 2015
+fake_ozone %>% 
+  filter(station_year == most_recent_year) %>% 
+  group_by(station_id) %>% arrange(desc(ozone)) %>% slice(4) -> fourthworstozonebystation
+# 
+# nrow(fourthworstbystation)
+# print(fourthworstbystation)
+
+```
+
+Now we want a graph of this:
+
+```{r}
+make_Figure2(fourthworstozonebystation, AirZone_specific_phrases)
+
+
+```
+
+### Figure 3
+
+```{r}
+make_Figure3(AirZone_specific_pm25, AirZone_specific_phrases)
+```
+
+### Figure 4
+
+```{r}
+
+fig_4_data <- make_Figure4_data(AirZone_specific_pm25)
+```
+
+Now the graph:
+```{r}
+  make_Figure4(fig_4_data, AirZone_specific_phrases)
+```
+
+### Figure 5
+
+```{r}
+
+fig_5_data <- make_Figure5_data()
+
+```
+
+Now the final graph:
+```{r}
+make_Figure5(fig_5_data, AirZone_specific_phrases)
+```
+
+I need to make the lines discontinuous when there is no "next-year" data. 
+
+## Map
+
+The code to generate the air zone map exists in the existing repositories and I would expect to recycle that code.

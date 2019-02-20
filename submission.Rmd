@@ -1,0 +1,38 @@
+---
+title: "Proposal: Creation of Air Quality Reporting Templates in R Markdown"
+author: "1186684BC Ltd"
+date: "17/02/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Introduction
+
+This RFP seeks to automate Air Quality reports, using static and parameterized RMardown. 
+
+## Summary of Approach
+
+Review of the example document showed that all Figures and Tables 2&3 could be reproduced. (Table 1 cannot be precisely reproduced using “gt” at this time.)
+
+The core design strategy adopted is to build one function for each output object; static and parameterized Rmd files call these centralized functions. All functions support parameterization. 
+
+To test this design, I simulated data structures comparable to those used in the Ozone and PM25 repos, and wrote draft functions for each output, and an example parameterized Rmd file. This work is now mostly completed in draft and the associated PDF and Rmd files are on github.
+I would particular attention to the use of colour in Tables 2 & 3, and the use of different colouration rules for different variables within Table 3.
+
+If this proposal is accepted, the source file holding the functions  will be revised and released via github.
+
+## Demonstrated Git and Github, etc:
+
+I have used R for academic, private and contracted projects over the last decade. I currently support the BC Government’s Integrated Data Office’s activities using these tools. 
+
+I do not maintain a public github presence. However I have established a github repo for this project: https://github.com/1186684BC/air_zone . 
+
+## Collaboration
+
+I visit Victoria weekly to support other projects, and use teleconferencing.
+
+## Availability and Completion
+
+As I already have prototyped all core functions, and therefore see no problem meeting the deadline.
